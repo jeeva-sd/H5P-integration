@@ -1,0 +1,27 @@
+{
+  "name": "h5p-backend",
+  "version": "1.0.0",
+  "description": "H5P Backend Server",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": ["h5p", "express", "nodejs"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.1.0",
+    "@lumieducation/h5p-server": "^10.0.4",
+    "@lumieducation/h5p-express": "^10.0.4",
+    "body-parser": "^1.20.3",
+    "express-fileupload": "^1.5.1",
+    "i18next": "^23.16.8",
+    "i18next-fs-backend": "^2.3.2",
+    "i18next-http-middleware": "^3.6.0",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

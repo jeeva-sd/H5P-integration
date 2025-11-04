@@ -1,0 +1,37 @@
+{
+    "baseUrl": "/h5p",
+    "contentFilesUrl": "/h5p/content",
+    "coreUrl": "/h5p/core",
+    "editorLibraryUrl": "/h5p/editor",
+    "librariesUrl": "/h5p/libraries",
+    "maxFileSize": 52428800,
+    "maxTotalSize": 104857600,
+    "hubContentTypesEndpoint": "https://api.h5p.org/v1/content-types/",
+    "hubRegistrationEndpoint": "https://api.h5p.org/v1/sites",
+    "contentHubEnabled": true,
+    "contentHubMetadataRefreshInterval": 86400000,
+    "contentTypeCacheRefreshInterval": 86400000,
+    "contentUserStateSaveInterval": 5000,
+    "contentWhitelist": "json png jpg jpeg gif bmp tif tiff eot ttf woff woff2 otf webm mp4 ogg mp3 m4a wav txt pdf rtf doc docx xls xlsx ppt pptx odt ods odp xml csv diff patch swf md textile vtt webvtt gltf glb",
+    "customization": {
+      "global": {
+        "editor": {
+          "scripts": [],
+          "styles": []
+        },
+        "player": {
+          "scripts": [],
+          "styles": []
+        }
+      }
+    },
+    "disableFullscreen": false,
+    "enableLrsContentTypes": true,
+    "exportMaxContentPathLength": 255,
+    "fetchingDisabled": 0,
+    "libraryWhitelist": "js css svg",
+    "sendUsageStatistics": false,
+    "setFinishedEnabled": true,
+    "siteType": "local",
+    "uuid": "91008837-cb02-465a-aadf-71ec420e00f3"
+  }
