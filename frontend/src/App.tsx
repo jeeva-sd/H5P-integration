@@ -1,7 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import ListPage from './pages/ListPage';
-import CreatePage from './pages/CreatePage';
-import ViewPage from './pages/ViewPage';
+import HomePage from './pages/HomePage';
+import EditorPage from './pages/EditorPage';
+import PlayerPage from './pages/PlayerPage';
+import DocumentationPage from './pages/DocumentationPage';
 import './App.css';
 
 function App() {
@@ -9,18 +10,22 @@ function App() {
     <Router>
       <div className="app">
         <nav className="navbar">
-          <h1>H5P Content Manager</h1>
+          <div className="nav-brand">
+            <h1>🎓 H5P Learning App</h1>
+          </div>
           <div className="nav-links">
-            <Link to="/">📋 List</Link>
-            <Link to="/create">➕ Create</Link>
+            <Link to="/">Home</Link>
+            <Link to="/docs">Documentation</Link>
           </div>
         </nav>
-        
+
         <main className="main-content">
           <Routes>
-            <Route path="/" element={<ListPage />} />
-            <Route path="/create" element={<CreatePage />} />
-            <Route path="/view/:id" element={<ViewPage />} />
+            <Route path="/" element={<HomePage />} />
+            <Route path="/create" element={<EditorPage />} />
+            <Route path="/edit/:contentId" element={<EditorPage />} />
+            <Route path="/play/:contentId" element={<PlayerPage />} />
+            <Route path="/docs" element={<DocumentationPage />} />
           </Routes>
         </main>
       </div>

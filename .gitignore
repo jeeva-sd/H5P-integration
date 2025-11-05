@@ -1,2 +1,5 @@
 node_modules
 dist
+
+h5p-rest-example-client
+h5p-rest-example-server
