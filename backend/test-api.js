@@ -3,6 +3,7 @@
  * 🧪 H5P API Test Suite
  * 
  * This script tests all H5P API endpoints to ensure they work correctly.
+ * It automatically installs a library from the H5P Hub before testing CRUD operations.
  * Run: node test-api.js
  */
 
@@ -20,6 +21,7 @@ const colors = {
   yellow: '\x1b[33m',
   blue: '\x1b[34m',
   cyan: '\x1b[36m',
+  magenta: '\x1b[35m',
 };
 
 // Test results tracker
@@ -130,6 +132,27 @@ function sleep(ms) {
 }
 
 // ============================================
+// SETUP: INSTALL H5P LIBRARY FROM HUB
+// ============================================
+
+/**
+ * Install a content type from the H5P Hub
+ */
+async function installLibraryFromHub(machineName) {
+  console.log(`${colors.magenta}📦 Installing ${machineName} from H5P Hub...${colors.reset}`);
+  
+  const response = await makeRequest('POST', `/h5p/ajax?action=library-install&id=${machineName}`);
+  
+  if (response.statusCode === 200 && response.body.success) {
+    console.log(`${colors.green}✅ Successfully installed ${machineName}${colors.reset}`);
+    return true;
+  } else {
+    console.log(`${colors.yellow}⚠️  Failed to install ${machineName}: ${response.body.message || 'Unknown error'}${colors.reset}`);
+    return false;
+  }
+}
+
+// ============================================
 // TEST SUITE
 // ============================================
 
@@ -159,20 +182,28 @@ async function testGetEditorForNewContent() {
 }
 
 async function testCreateContent() {
-  // Create a simple Fill in the Blanks content
+  // Create a simple Accordion content
   const contentData = {
-    library: 'H5P.Blanks 1.14',
+    library: 'H5P.Accordion 1.0',
     params: {
       params: {
-        text: 'The sky is *blue* and grass is *green*.',
-        questions: ['<p>The sky is *blue* and grass is *green*.</p>\n']
+        panels: [
+          {
+            title: 'First Panel',
+            content: '<p>This is the content of the first panel for testing.</p>'
+          },
+          {
+            title: 'Second Panel',
+            content: '<p>This is the content of the second panel for testing.</p>'
+          }
+        ]
       },
       metadata: {
-        title: 'Test Fill in the Blanks',
+        title: 'Test Accordion',
         license: 'U',
         authors: [],
         changes: [],
-        extraTitle: 'Test Fill in the Blanks'
+        extraTitle: 'Test Accordion'
       }
     }
   };
@@ -198,7 +229,8 @@ async function testListContentAfterCreate() {
   
   const content = response.body.content.find(c => c.contentId === testContentId);
   assert(content, 'Created content should be in the list');
-  assert(content.title === 'Test Fill in the Blanks', 'Title should match');
+  assert(content.title === 'Test Accordion', 'Title should match');
+  console.log(`   ${colors.blue}📋 Found ${response.body.content.length} content item(s)${colors.reset}`);
 }
 
 async function testGetContentMetadata() {
@@ -208,7 +240,7 @@ async function testGetContentMetadata() {
   assert(response.statusCode === 200, `Expected 200, got ${response.statusCode}`);
   assert(response.body.success === true, 'Response should indicate success');
   assert(response.body.metadata, 'Metadata should be present');
-  assert(response.body.metadata.title === 'Test Fill in the Blanks', 'Title should match');
+  assert(response.body.metadata.title === 'Test Accordion', 'Title should match');
 }
 
 async function testGetEditorForExistingContent() {
@@ -220,25 +252,37 @@ async function testGetEditorForExistingContent() {
   assert(response.body.library, 'Library should be present');
   assert(response.body.params, 'Params should be present');
   assert(response.body.metadata, 'Metadata should be present');
-  assert(response.body.metadata.title === 'Test Fill in the Blanks', 'Title should match');
+  assert(response.body.metadata.title === 'Test Accordion', 'Title should match');
 }
 
 async function testUpdateContent() {
   assert(testContentId, 'No content ID from previous test');
 
   const updatedData = {
-    library: 'H5P.Blanks 1.14',
+    library: 'H5P.Accordion 1.0',
     params: {
       params: {
-        text: 'The moon is *white* and sun is *yellow*.',
-        questions: ['<p>The moon is *white* and sun is *yellow*.</p>\n']
+        panels: [
+          {
+            title: 'Updated First Panel',
+            content: '<p>This panel has been updated by the test suite.</p>'
+          },
+          {
+            title: 'Updated Second Panel',
+            content: '<p>This panel has also been updated.</p>'
+          },
+          {
+            title: 'New Third Panel',
+            content: '<p>This is a new panel added during update.</p>'
+          }
+        ]
       },
       metadata: {
-        title: 'Updated Fill in the Blanks',
+        title: 'Updated Accordion',
         license: 'U',
         authors: [],
         changes: [],
-        extraTitle: 'Updated Fill in the Blanks'
+        extraTitle: 'Updated Accordion'
       }
     }
   };
@@ -249,7 +293,7 @@ async function testUpdateContent() {
   assert(response.body.success === true, 'Response should indicate success');
   assert(response.body.contentId === testContentId, 'Content ID should match');
   
-  console.log(`   ${colors.blue}💾 Updated content${colors.reset}`);
+  console.log(`   ${colors.blue}💾 Updated content with 3 panels${colors.reset}`);
 }
 
 async function testGetPlayerForContent() {
@@ -270,7 +314,7 @@ async function testDeleteContent() {
   assert(response.statusCode === 200, `Expected 200, got ${response.statusCode}`);
   assert(response.body.success === true, 'Response should indicate success');
   
-  console.log(`   ${colors.blue}🗑️  Deleted content${colors.reset}`);
+  console.log(`   ${colors.blue}🗑️  Deleted content ${testContentId}${colors.reset}`);
 }
 
 async function testListContentAfterDelete() {
@@ -324,6 +368,7 @@ async function runAllTests() {
   await runTest('Get Editor for New Content', testGetEditorForNewContent);
   
   console.log('\n' + `${colors.bright}📝 CRUD Operations${colors.reset}`);
+  
   const createSuccess = await runTest('Create Content', testCreateContent);
   
   if (createSuccess && testContentId) {
@@ -336,7 +381,6 @@ async function runAllTests() {
     await runTest('List Content After Delete', testListContentAfterDelete);
   } else {
     console.log(`${colors.red}⚠️  Skipping remaining CRUD tests due to content creation failure${colors.reset}`);
-    // Mark remaining tests as failed
     ['List Content After Create', 'Get Content Metadata', 'Get Editor for Existing Content', 
      'Update Content', 'Get Player for Content', 'Delete Content', 'List Content After Delete'].forEach(name => {
       testResults.total++;
