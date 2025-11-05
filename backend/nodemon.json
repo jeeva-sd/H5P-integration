@@ -1,0 +1,14 @@
+{
+  "ignore": [
+    "h5p/*",
+    "test-api.js",
+    "*.log"
+  ],
+  "watch": [
+    "server.js",
+    "routes/*",
+    "config/*",
+    "middleware/*",
+    "models/*"
+  ]
+}

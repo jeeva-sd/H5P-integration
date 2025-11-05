@@ -1,0 +1,29 @@
+{
+  "title": "Greeting Card",
+  "machineName": "H5P.GreetingCard",
+  "majorVersion": 1,
+  "minorVersion": 0,
+  "patchVersion": 9,
+  "runnable": 1,
+  "author": "Joubel",
+  "license": "MIT",
+  "description": "Simple library that displays a greeting card",
+  "contentType": "Media",
+  "preloadedJs": [
+    {
+      "path": "greetingcard.js"
+    }
+  ],
+  "preloadedCss": [
+    {
+      "path": "greetingcard.css"
+    }
+  ],
+  "preloadedDependencies": [
+    {
+      "machineName": "H5P.JoubelUI",
+      "majorVersion": 1,
+      "minorVersion": 3
+    }
+  ]
+}
