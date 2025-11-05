@@ -30,6 +30,9 @@ let testResults = {
   tests: []
 };
 
+// Global test content ID
+let testContentId = null;
+
 /**
  * Make HTTP request
  */
@@ -148,7 +151,6 @@ async function testListContentEmpty() {
 async function testGetEditorForNewContent() {
   const response = await makeRequest('GET', '/api/content/new/edit');
   assert(response.statusCode === 200, `Expected 200, got ${response.statusCode}`);
-  // Updated: editorModel is now returned directly, not wrapped in success object
   assert(response.body.integration, 'Integration object should be present');
   assert(response.body.scripts, 'Scripts array should be present');
   assert(response.body.styles, 'Styles array should be present');
@@ -157,152 +159,128 @@ async function testGetEditorForNewContent() {
 }
 
 async function testCreateContent() {
+  // Create a simple Fill in the Blanks content
   const contentData = {
-    library: 'H5P.Example 1.0',
+    library: 'H5P.Blanks 1.14',
     params: {
-      greeting: 'Hello World'
-    },
-    metadata: {
-      title: 'Test Content',
-      license: 'U',
-      authors: [],
-      changes: [],
-      extraTitle: 'Test Content'
+      params: {
+        text: 'The sky is *blue* and grass is *green*.',
+        questions: ['<p>The sky is *blue* and grass is *green*.</p>\n']
+      },
+      metadata: {
+        title: 'Test Fill in the Blanks',
+        license: 'U',
+        authors: [],
+        changes: [],
+        extraTitle: 'Test Fill in the Blanks'
+      }
     }
   };
 
   const response = await makeRequest('POST', '/api/content', contentData);
   
-  // This might fail if no libraries are installed, which is expected
-  if (response.statusCode === 500) {
-    console.log(`   ${colors.yellow}⚠️  Note: Create failed (likely no libraries installed)${colors.reset}`);
-    return; // Don't fail the test
-  }
-  
-  assert(response.statusCode === 200, `Expected 200, got ${response.statusCode}`);
+  assert(response.statusCode === 200, `Expected 200, got ${response.statusCode}: ${response.body.error || ''}`);
   assert(response.body.success === true, 'Response should indicate success');
   assert(response.body.contentId, 'Content ID should be returned');
   
   // Store contentId for later tests
-  global.testContentId = response.body.contentId;
+  testContentId = response.body.contentId;
+  console.log(`   ${colors.blue}📝 Created content with ID: ${testContentId}${colors.reset}`);
 }
 
 async function testListContentAfterCreate() {
-  if (!global.testContentId) {
-    console.log(`   ${colors.yellow}⚠️  Skipped: No content created${colors.reset}`);
-    return;
-  }
+  assert(testContentId, 'No content ID from previous test');
 
   const response = await makeRequest('GET', '/api/content');
   assert(response.statusCode === 200, `Expected 200, got ${response.statusCode}`);
   assert(response.body.success === true, 'Response should indicate success');
   assert(response.body.content.length > 0, 'Should have at least one content item');
   
-  const content = response.body.content.find(c => c.contentId === global.testContentId);
+  const content = response.body.content.find(c => c.contentId === testContentId);
   assert(content, 'Created content should be in the list');
-  assert(content.title === 'Test Content', 'Title should match');
+  assert(content.title === 'Test Fill in the Blanks', 'Title should match');
 }
 
 async function testGetContentMetadata() {
-  if (!global.testContentId) {
-    console.log(`   ${colors.yellow}⚠️  Skipped: No content created${colors.reset}`);
-    return;
-  }
+  assert(testContentId, 'No content ID from previous test');
 
-  const response = await makeRequest('GET', `/api/content/${global.testContentId}`);
+  const response = await makeRequest('GET', `/api/content/${testContentId}`);
   assert(response.statusCode === 200, `Expected 200, got ${response.statusCode}`);
   assert(response.body.success === true, 'Response should indicate success');
   assert(response.body.metadata, 'Metadata should be present');
-  assert(response.body.metadata.title === 'Test Content', 'Title should match');
+  assert(response.body.metadata.title === 'Test Fill in the Blanks', 'Title should match');
 }
 
 async function testGetEditorForExistingContent() {
-  if (!global.testContentId) {
-    console.log(`   ${colors.yellow}⚠️  Skipped: No content created${colors.reset}`);
-    return;
-  }
+  assert(testContentId, 'No content ID from previous test');
 
-  const response = await makeRequest('GET', `/api/content/${global.testContentId}/edit`);
+  const response = await makeRequest('GET', `/api/content/${testContentId}/edit`);
   assert(response.statusCode === 200, `Expected 200, got ${response.statusCode}`);
-  assert(response.body.success === true, 'Response should indicate success');
-  assert(response.body.editorModel, 'Editor model should be present');
+  assert(response.body.integration, 'Integration object should be present');
   assert(response.body.library, 'Library should be present');
   assert(response.body.params, 'Params should be present');
   assert(response.body.metadata, 'Metadata should be present');
+  assert(response.body.metadata.title === 'Test Fill in the Blanks', 'Title should match');
 }
 
 async function testUpdateContent() {
-  if (!global.testContentId) {
-    console.log(`   ${colors.yellow}⚠️  Skipped: No content created${colors.reset}`);
-    return;
-  }
+  assert(testContentId, 'No content ID from previous test');
 
   const updatedData = {
-    library: 'H5P.Example 1.0',
+    library: 'H5P.Blanks 1.14',
     params: {
-      greeting: 'Hello Updated World'
-    },
-    metadata: {
-      title: 'Updated Test Content',
-      license: 'U',
-      authors: [],
-      changes: [],
-      extraTitle: 'Updated Test Content'
+      params: {
+        text: 'The moon is *white* and sun is *yellow*.',
+        questions: ['<p>The moon is *white* and sun is *yellow*.</p>\n']
+      },
+      metadata: {
+        title: 'Updated Fill in the Blanks',
+        license: 'U',
+        authors: [],
+        changes: [],
+        extraTitle: 'Updated Fill in the Blanks'
+      }
     }
   };
 
-  const response = await makeRequest('PUT', `/api/content/${global.testContentId}`, updatedData);
+  const response = await makeRequest('PUT', `/api/content/${testContentId}`, updatedData);
   
-  if (response.statusCode === 500) {
-    console.log(`   ${colors.yellow}⚠️  Note: Update failed${colors.reset}`);
-    return;
-  }
-  
-  assert(response.statusCode === 200, `Expected 200, got ${response.statusCode}`);
+  assert(response.statusCode === 200, `Expected 200, got ${response.statusCode}: ${response.body.error || ''}`);
   assert(response.body.success === true, 'Response should indicate success');
-  assert(response.body.contentId === global.testContentId, 'Content ID should match');
+  assert(response.body.contentId === testContentId, 'Content ID should match');
+  
+  console.log(`   ${colors.blue}💾 Updated content${colors.reset}`);
 }
 
 async function testGetPlayerForContent() {
-  if (!global.testContentId) {
-    console.log(`   ${colors.yellow}⚠️  Skipped: No content created${colors.reset}`);
-    return;
-  }
+  assert(testContentId, 'No content ID from previous test');
 
-  const response = await makeRequest('GET', `/api/content/${global.testContentId}/play`);
+  const response = await makeRequest('GET', `/api/content/${testContentId}/play`);
   
-  if (response.statusCode === 500) {
-    console.log(`   ${colors.yellow}⚠️  Note: Play failed (expected without libraries)${colors.reset}`);
-    return;
-  }
-  
-  assert(response.statusCode === 200, `Expected 200, got ${response.statusCode}`);
-  assert(response.body.success === true, 'Response should indicate success');
-  assert(response.body.playerModel, 'Player model should be present');
+  assert(response.statusCode === 200, `Expected 200, got ${response.statusCode}: ${response.body.error || ''}`);
+  assert(response.body.integration, 'Integration object should be present');
+  assert(response.body.scripts, 'Scripts should be present');
+  assert(response.body.styles, 'Styles should be present');
 }
 
 async function testDeleteContent() {
-  if (!global.testContentId) {
-    console.log(`   ${colors.yellow}⚠️  Skipped: No content created${colors.reset}`);
-    return;
-  }
+  assert(testContentId, 'No content ID from previous test');
 
-  const response = await makeRequest('DELETE', `/api/content/${global.testContentId}`);
+  const response = await makeRequest('DELETE', `/api/content/${testContentId}`);
   assert(response.statusCode === 200, `Expected 200, got ${response.statusCode}`);
   assert(response.body.success === true, 'Response should indicate success');
+  
+  console.log(`   ${colors.blue}🗑️  Deleted content${colors.reset}`);
 }
 
 async function testListContentAfterDelete() {
-  if (!global.testContentId) {
-    console.log(`   ${colors.yellow}⚠️  Skipped: No content created${colors.reset}`);
-    return;
-  }
+  assert(testContentId, 'No content ID from previous test');
 
   const response = await makeRequest('GET', '/api/content');
   assert(response.statusCode === 200, `Expected 200, got ${response.statusCode}`);
   assert(response.body.success === true, 'Response should indicate success');
   
-  const content = response.body.content.find(c => c.contentId === global.testContentId);
+  const content = response.body.content.find(c => c.contentId === testContentId);
   assert(!content, 'Deleted content should not be in the list');
 }
 
@@ -337,7 +315,6 @@ async function testCorsHeaders() {
 
 async function runAllTests() {
   console.log(`${colors.bright}${colors.cyan}🧪 H5P API Test Suite${colors.reset}`);
-
   console.log(`${colors.blue}Testing server: ${BASE_URL}${colors.reset}\n`);
 
   // Basic Tests
@@ -347,14 +324,26 @@ async function runAllTests() {
   await runTest('Get Editor for New Content', testGetEditorForNewContent);
   
   console.log('\n' + `${colors.bright}📝 CRUD Operations${colors.reset}`);
-  await runTest('Create Content', testCreateContent);
-  await runTest('List Content After Create', testListContentAfterCreate);
-  await runTest('Get Content Metadata', testGetContentMetadata);
-  await runTest('Get Editor for Existing Content', testGetEditorForExistingContent);
-  await runTest('Update Content', testUpdateContent);
-  await runTest('Get Player for Content', testGetPlayerForContent);
-  await runTest('Delete Content', testDeleteContent);
-  await runTest('List Content After Delete', testListContentAfterDelete);
+  const createSuccess = await runTest('Create Content', testCreateContent);
+  
+  if (createSuccess && testContentId) {
+    await runTest('List Content After Create', testListContentAfterCreate);
+    await runTest('Get Content Metadata', testGetContentMetadata);
+    await runTest('Get Editor for Existing Content', testGetEditorForExistingContent);
+    await runTest('Update Content', testUpdateContent);
+    await runTest('Get Player for Content', testGetPlayerForContent);
+    await runTest('Delete Content', testDeleteContent);
+    await runTest('List Content After Delete', testListContentAfterDelete);
+  } else {
+    console.log(`${colors.red}⚠️  Skipping remaining CRUD tests due to content creation failure${colors.reset}`);
+    // Mark remaining tests as failed
+    ['List Content After Create', 'Get Content Metadata', 'Get Editor for Existing Content', 
+     'Update Content', 'Get Player for Content', 'Delete Content', 'List Content After Delete'].forEach(name => {
+      testResults.total++;
+      testResults.failed++;
+      testResults.tests.push({ name, status: 'FAILED', error: 'Content creation failed' });
+    });
+  }
   
   console.log('\n' + `${colors.bright}🛡️ Error Handling${colors.reset}`);
   await runTest('404 Error Handling', testErrorHandling404);
