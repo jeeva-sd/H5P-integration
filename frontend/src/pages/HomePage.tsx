@@ -1,18 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-const API_URL = 'http://localhost:4000';
-
-interface ContentItem {
-  contentId: string;
-  title: string;
-  mainLibrary: string;
-  createdAt: string;
-}
+import { contentService, type IContentListEntry } from '../services/ContentService';
 
 export default function HomePage() {
-  const [content, setContent] = useState<ContentItem[]>([]);
+  const [content, setContent] = useState<IContentListEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,13 +14,14 @@ export default function HomePage() {
 
   const loadContent = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const response = await fetch(`${API_URL}/api/content`);
-      const data = await response.json();
-      setContent(data.content || []);
-    } catch (error) {
-      console.error('Error loading content:', error);
-      alert('Failed to load content');
+      // API now returns array directly, not wrapped in { content: [] }
+      const data = await contentService.list();
+      setContent(data);
+    } catch (err: any) {
+      console.error('Error loading content:', err);
+      setError(err.message || 'Failed to load content');
     } finally {
       setLoading(false);
     }
@@ -37,14 +31,12 @@ export default function HomePage() {
     if (!confirm(`Delete "${title}"?`)) return;
 
     try {
-      await fetch(`${API_URL}/api/content/${contentId}`, {
-        method: 'DELETE',
-      });
+      await contentService.delete(contentId);
       alert('Content deleted successfully!');
       loadContent();
-    } catch (error) {
-      console.error('Error deleting content:', error);
-      alert('Failed to delete content');
+    } catch (err: any) {
+      console.error('Error deleting content:', err);
+      alert(`Failed to delete content: ${err.message}`);
     }
   };
 
@@ -56,6 +48,15 @@ export default function HomePage() {
           ➕ Create New Content
         </button>
       </div>
+
+      {error && (
+        <div className="error-message">
+          <strong>❌ Error:</strong> {error}
+          <button className="btn btn-secondary" onClick={loadContent}>
+            🔄 Retry
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <div className="loading">
@@ -77,10 +78,10 @@ export default function HomePage() {
             <div key={item.contentId} className="content-card">
               <div className="content-header">
                 <h3>{item.title}</h3>
-                <span className="library-badge">{item.mainLibrary}</span>
+                <span className="library-badge">{item.mainLibrary || 'Unknown'}</span>
               </div>
               <div className="content-meta">
-                <small>📅 {new Date(item.createdAt).toLocaleDateString()}</small>
+                <small>ID: {item.contentId}</small>
               </div>
               <div className="content-actions">
                 <button

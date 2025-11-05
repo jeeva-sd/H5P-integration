@@ -1,30 +1,7 @@
 import { useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { H5PEditorUI } from '@lumieducation/h5p-react';
-
-const API_URL = 'http://localhost:4000';
-
-const api = {
-  async getContentForEdit(contentId: string) {
-    // Handle new content creation (contentId will be 'new' or undefined)
-    const id = (!contentId || contentId === 'new' || contentId === 'undefined') ? 'new' : contentId;
-    const response = await fetch(`${API_URL}/api/content/${id}/edit`);
-    return response.json();
-  },
-
-  async saveContent(contentId: string | null, data: any) {
-    const url = contentId 
-      ? `${API_URL}/api/content/${contentId}`
-      : `${API_URL}/api/content`;
-    
-    const response = await fetch(url, {
-      method: contentId ? 'PUT' : 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    return response.json();
-  },
-};
+import { contentService } from '../services/ContentService';
 
 export default function EditorPage() {
   const { contentId } = useParams();
@@ -33,6 +10,32 @@ export default function EditorPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isNewContent = !contentId || contentId === 'new';
+
+  const loadContentForEdit = async (id: string) => {
+    try {
+      return await contentService.getEdit(id);
+    } catch (err: any) {
+      console.error('Error loading content for edit:', err);
+      setError(err.message || 'Failed to load content');
+      throw err;
+    }
+  };
+
+  const saveContent = async (id: string | null, data: any) => {
+    try {
+      // API expects: { library: string, params: { params: any, metadata: any } }
+      const result = await contentService.save(id, data);
+      
+      // API returns: { contentId: string, metadata: IContentMetadata }
+      console.log('Content saved successfully:', result);
+      return result;
+    } catch (err: any) {
+      console.error('Error saving content:', err);
+      throw err;
+    }
+  };
 
   const handleSave = async () => {
     if (!editorRef.current) return;
@@ -66,8 +69,6 @@ export default function EditorPage() {
     setError(event.detail?.message || 'Failed to save content');
     setSaving(false);
   };
-
-  const isNewContent = !contentId || contentId === 'new';
 
   return (
     <div className="editor-container">
@@ -104,6 +105,9 @@ export default function EditorPage() {
       {error && (
         <div className="error-message">
           <strong>❌ Error:</strong> {error}
+          <button className="btn btn-secondary" onClick={() => setError(null)}>
+            ✕ Dismiss
+          </button>
         </div>
       )}
 
@@ -111,8 +115,8 @@ export default function EditorPage() {
         <H5PEditorUI
           ref={editorRef}
           contentId={isNewContent ? 'new' : contentId!}
-          loadContentCallback={api.getContentForEdit}
-          saveContentCallback={api.saveContent}
+          loadContentCallback={loadContentForEdit}
+          saveContentCallback={saveContent}
           onSaved={handleSaved}
           onSaveError={handleSaveError}
         />

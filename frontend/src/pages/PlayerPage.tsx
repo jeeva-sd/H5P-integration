@@ -1,14 +1,14 @@
 import { useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { H5PPlayerUI } from '@lumieducation/h5p-react';
-
-const API_URL = 'http://localhost:4000';
+import { contentService } from '../services/ContentService';
 
 export default function PlayerPage() {
   const { contentId } = useParams();
   const navigate = useNavigate();
   const playerRef = useRef<H5PPlayerUI>(null);
   const [initialized, setInitialized] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleInitialized = () => {
     console.log('Player initialized');
@@ -19,9 +19,14 @@ export default function PlayerPage() {
     console.log('xAPI Statement:', { statement, context, event });
   };
 
-  const loadContentForPlay = async (contentId: string) => {
-    const response = await fetch(`${API_URL}/api/content/${contentId}/play`);
-    return response.json();
+  const loadContentForPlay = async (id: string) => {
+    try {
+      return await contentService.getPlay(id);
+    } catch (err: any) {
+      console.error('Error loading content for play:', err);
+      setError(err.message || 'Failed to load content');
+      throw err;
+    }
   };
 
   return (
@@ -41,7 +46,16 @@ export default function PlayerPage() {
         </div>
       </div>
 
-      {!initialized && (
+      {error && (
+        <div className="error-message">
+          <strong>❌ Error:</strong> {error}
+          <button className="btn btn-secondary" onClick={() => navigate('/')}>
+            ← Go Back
+          </button>
+        </div>
+      )}
+
+      {!initialized && !error && (
         <div className="loading">
           <div className="spinner"></div>
           <p>Loading H5P content...</p>
