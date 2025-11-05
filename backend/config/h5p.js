@@ -9,17 +9,10 @@ const SimplePermissionSystem = require("../models/PermissionSystem");
  */
 async function initializeH5P(translationFn) {
   try {
-    // 1. Create H5P configuration
-    const config = new H5P.H5PConfig(
-      new H5P.fsImplementations.InMemoryStorage(),
-      {
-        baseUrl: "/h5p",
-        contentFilesUrl: "/h5p/content",
-        coreUrl: "/h5p/core",
-        editorUrl: "/h5p/editor",
-        librariesUrl: "/h5p/libraries",
-      }
-    );
+    // 1. Load the configuration file from the local file system (matching official implementation)
+    const config = await new H5P.H5PConfig(
+      new H5P.fsImplementations.JsonStorage(path.resolve(__dirname, '../config.json'))
+    ).load();
 
     // 2. Setup storage paths
     const librariesPath = path.resolve(__dirname, "../h5p/libraries");
@@ -30,15 +23,18 @@ async function initializeH5P(translationFn) {
     // 3. Create permission system
     const permissionSystem = new SimplePermissionSystem();
 
-    // 4. Create H5PEditor manually to ensure translation function is passed correctly
+    // 4. Create URL Generator (optional but recommended for proper URL handling)
+    const urlGenerator = new H5P.UrlGenerator(config);
+
+    // 5. Create H5PEditor matching official implementation
     const h5pEditor = new H5P.H5PEditor(
       new H5P.fsImplementations.InMemoryStorage(), // key-value storage
       config,
       new H5P.fsImplementations.FileLibraryStorage(librariesPath),
       new H5P.fsImplementations.FileContentStorage(contentPath),
       new H5P.fsImplementations.DirectoryTemporaryFileStorage(temporaryPath),
-      translationFn, // Pass the translation function here
-      undefined, // url generator (optional)
+      translationFn,
+      urlGenerator,
       {
         permissionSystem,
         enableHubLocalization: true,
@@ -47,13 +43,13 @@ async function initializeH5P(translationFn) {
       new H5P.fsImplementations.FileContentUserDataStorage(userDataPath)
     );
 
-    // 5. Create H5P Player
+    // 6. Create H5P Player
     const h5pPlayer = new H5P.H5PPlayer(
       h5pEditor.libraryStorage,
       h5pEditor.contentStorage,
       config,
       undefined,
-      undefined,
+      urlGenerator,
       undefined,
       { permissionSystem },
       h5pEditor.contentUserDataStorage

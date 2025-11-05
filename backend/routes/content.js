@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 /**
- * Content Routes
+ * Content Routes - Matching Official H5P REST API Implementation
  * Handles all H5P content CRUD operations
  */
 module.exports = function createContentRouter(h5pEditor, h5pPlayer) {
@@ -11,53 +11,37 @@ module.exports = function createContentRouter(h5pEditor, h5pPlayer) {
   // ----------------
   router.get("/", async (req, res) => {
     try {
-      console.log("📋 Listing all content...");
       const contentIds = await h5pEditor.contentManager.listContent(req.user);
       
-      const contentList = await Promise.all(
-        contentIds.map(async (id) => {
-          const metadata = await h5pEditor.contentManager.getContentMetadata(id, req.user);
-          return {
-            contentId: id,
-            title: metadata.title,
-            mainLibrary: metadata.mainLibrary,
-            createdAt: metadata.createdAt || new Date().toISOString(),
-          };
-        })
+      const contentObjects = await Promise.all(
+        contentIds.map(async (id) => ({
+          content: await h5pEditor.contentManager.getContentMetadata(id, req.user),
+          id
+        }))
       );
 
-      res.json({ success: true, content: contentList });
+      // Match official API response format
+      res.status(200).send(
+        contentObjects.map((o) => ({
+          contentId: o.id,
+          title: o.content.title,
+          mainLibrary: o.content.mainLibrary
+        }))
+      );
     } catch (error) {
       console.error("Error listing content:", error);
-      res.status(500).json({ success: false, error: error.message });
+      res.status(500).send(`Error listing content: ${error.message}`);
     }
   });
 
   // ----------------
-  // 2. GET CONTENT METADATA
-  // ----------------
-  router.get("/:contentId", async (req, res) => {
-    try {
-      const { contentId } = req.params;
-      const metadata = await h5pEditor.contentManager.getContentMetadata(
-        contentId,
-        req.user
-      );
-      res.json({ success: true, metadata });
-    } catch (error) {
-      res.status(500).json({ success: false, error: error.message });
-    }
-  });
-
-  // ----------------
-  // 3. GET CONTENT FOR EDITING
+  // 2. GET CONTENT FOR EDITING
   // ----------------
   router.get("/:contentId/edit", async (req, res) => {
     try {
       const { contentId } = req.params;
-      console.log(`✏️ Getting editor for content: ${contentId}`);
-
-      // Get editor model (integration object, scripts, styles)
+      
+      // Match official implementation - handle 'undefined' string
       const editorModel = await h5pEditor.render(
         contentId === "new" || contentId === "undefined" ? undefined : contentId,
         req.language || "en",
@@ -67,30 +51,28 @@ module.exports = function createContentRouter(h5pEditor, h5pPlayer) {
       // If editing existing content, get the content data and merge it
       if (contentId !== "new" && contentId !== "undefined") {
         const content = await h5pEditor.getContent(contentId, req.user);
-        // Return the editorModel with content data merged in
-        res.status(200).json({
+        res.status(200).send({
           ...editorModel,
           library: content.library,
-          params: content.params.params,
           metadata: content.params.metadata,
+          params: content.params.params
         });
       } else {
         // For new content, return editorModel directly
-        res.status(200).json(editorModel);
+        res.status(200).send(editorModel);
       }
     } catch (error) {
       console.error("Error getting editor:", error);
-      res.status(500).json({ success: false, error: error.message });
+      res.status(error.httpStatusCode || 500).send(error.message);
     }
   });
 
   // ----------------
-  // 4. GET CONTENT FOR PLAYING
+  // 3. GET CONTENT FOR PLAYING
   // ----------------
   router.get("/:contentId/play", async (req, res) => {
     try {
       const { contentId } = req.params;
-      console.log(`▶️ Getting player for content: ${contentId}`);
 
       const playerModel = await h5pPlayer.render(
         contentId,
@@ -98,114 +80,97 @@ module.exports = function createContentRouter(h5pEditor, h5pPlayer) {
         req.language || "en"
       );
 
-      res.status(200).json(playerModel);
+      res.status(200).send(playerModel);
     } catch (error) {
       console.error("Error getting player:", error);
-      res.status(error.httpStatusCode || 500).json({ success: false, error: error.message });
+      res.status(error.httpStatusCode || 500).send(error.message);
     }
   });
 
   // ----------------
-  // 5. CREATE NEW CONTENT
+  // 4. CREATE NEW CONTENT
   // ----------------
   router.post("/", async (req, res) => {
     try {
-      // Match the official API structure
-      let params, metadata, library;
-      
-      if (req.body.params && req.body.params.params && req.body.params.metadata) {
-        // Official API format
-        params = req.body.params.params;
-        metadata = req.body.params.metadata;
-        library = req.body.library;
-      } else {
-        // Fallback to direct format
-        params = req.body.params;
-        metadata = req.body.metadata;
-        library = req.body.library;
+      // Match official API structure validation
+      if (
+        !req.body.params ||
+        !req.body.params.params ||
+        !req.body.params.metadata ||
+        !req.body.library ||
+        !req.user
+      ) {
+        return res.status(400).send('Malformed request');
       }
 
-      if (!params || !metadata || !library) {
-        return res.status(400).json({ success: false, error: "Malformed request" });
-      }
-
-      console.log("➕ Creating new content...");
-
-      const { id: contentId, metadata: savedMetadata } =
+      const { id: contentId, metadata } =
         await h5pEditor.saveOrUpdateContentReturnMetaData(
           undefined,
-          params,
-          metadata,
-          library,
+          req.body.params.params,
+          req.body.params.metadata,
+          req.body.library,
           req.user
         );
 
-      console.log(`✅ Content created with ID: ${contentId}`);
-      res.status(200).json({ success: true, contentId, metadata: savedMetadata });
+      // Match official response format
+      res.status(200).json({ contentId, metadata });
     } catch (error) {
       console.error("Error creating content:", error);
-      res.status(500).json({ success: false, error: error.message });
+      res.status(500).send(error.message);
     }
   });
 
   // ----------------
-  // 6. UPDATE EXISTING CONTENT
+  // 5. UPDATE EXISTING CONTENT (using PATCH like official)
   // ----------------
-  router.put("/:contentId", async (req, res) => {
+  router.patch("/:contentId", async (req, res) => {
     try {
       const { contentId } = req.params;
       
-      // Match the official API structure
-      let params, metadata, library;
-      
-      if (req.body.params && req.body.params.params && req.body.params.metadata) {
-        params = req.body.params.params;
-        metadata = req.body.params.metadata;
-        library = req.body.library;
-      } else {
-        params = req.body.params;
-        metadata = req.body.metadata;
-        library = req.body.library;
+      // Match official API structure validation
+      if (
+        !req.body.params ||
+        !req.body.params.params ||
+        !req.body.params.metadata ||
+        !req.body.library ||
+        !req.user
+      ) {
+        return res.status(400).send('Malformed request');
       }
 
-      if (!params || !metadata || !library) {
-        return res.status(400).json({ success: false, error: "Malformed request" });
-      }
-
-      console.log(`💾 Updating content: ${contentId}`);
-
-      const { id, metadata: savedMetadata } =
+      const { id, metadata } =
         await h5pEditor.saveOrUpdateContentReturnMetaData(
-          contentId,
-          params,
-          metadata,
-          library,
+          contentId.toString(),
+          req.body.params.params,
+          req.body.params.metadata,
+          req.body.library,
           req.user
         );
 
-      console.log(`✅ Content updated: ${contentId}`);
-      res.status(200).json({ success: true, contentId: id, metadata: savedMetadata });
+      // Match official response format
+      res.status(200).json({ contentId: id, metadata });
     } catch (error) {
       console.error("Error updating content:", error);
-      res.status(500).json({ success: false, error: error.message });
+      res.status(500).send(error.message);
     }
   });
 
   // ----------------
-  // 7. DELETE CONTENT
+  // 6. DELETE CONTENT
   // ----------------
   router.delete("/:contentId", async (req, res) => {
     try {
       const { contentId } = req.params;
-      console.log(`🗑️ Deleting content: ${contentId}`);
-
+      
       await h5pEditor.deleteContent(contentId, req.user);
 
-      console.log(`✅ Content deleted: ${contentId}`);
-      res.json({ success: true, message: "Content deleted successfully" });
+      // Match official response format
+      res.status(200).send(`Content ${contentId} successfully deleted.`);
     } catch (error) {
       console.error("Error deleting content:", error);
-      res.status(500).json({ success: false, error: error.message });
+      res.status(500).send(
+        `Error deleting content with id ${req.params.contentId}: ${error.message}`
+      );
     }
   });
 
