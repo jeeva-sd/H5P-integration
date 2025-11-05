@@ -3,7 +3,9 @@
  * Handles all content-related API calls
  */
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+// Use relative URLs to work with Vite proxy in development
+// In production, set VITE_API_URL to your backend URL
+const API_URL = import.meta.env.VITE_API_URL || '';
 const API_BASE = '/api/content';
 
 export interface IContentListEntry {
@@ -42,6 +44,8 @@ export class ContentService {
   private baseUrl: string;
 
   constructor() {
+    // In development: '' + '/api/content' = '/api/content' (uses Vite proxy)
+    // In production: 'https://your-api.com' + '/api/content' = 'https://your-api.com/api/content'
     this.baseUrl = API_URL + API_BASE;
   }
 
