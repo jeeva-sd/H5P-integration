@@ -43,7 +43,7 @@ export default function HomePage() {
   return (
     <div className="content-list">
       <div className="header">
-        <h2>📚 My H5P Content</h2>
+        <h2>List Page</h2>
         <button className="btn btn-primary" onClick={() => navigate('/create')}>
           ➕ Create New Content
         </button>

@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "prepare": "sh download-core.sh 829524eaf81fe3f3a295d0e843812be4735f51fc 80b3b281ee9d064b563f242e8ee7a0026b5bf205",
     "test": "node test-api.js",
     "test:watch": "nodemon --exec 'node test-api.js' --watch server.js --watch test-api.js"
   },

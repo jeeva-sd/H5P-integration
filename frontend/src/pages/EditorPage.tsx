@@ -74,7 +74,7 @@ export default function EditorPage() {
     <div className="editor-container">
       <div className="editor-header">
         <div className="header-left">
-          <h2>{isNewContent ? '➕ Create New Content' : '✏️ Edit Content'}</h2>
+          <h2>{isNewContent ? '➕ Create New Content' : 'Edit Content'}</h2>
           {contentId && contentId !== 'new' && (
             <span className="content-id">ID: {contentId}</span>
           )}
@@ -91,9 +91,9 @@ export default function EditorPage() {
                 Saving...
               </>
             ) : saved ? (
-              <>✅ Saved!</>
+              <>Saved!</>
             ) : (
-              <>💾 Save Content</>
+              <>Save Content</>
             )}
           </button>
           <button className="btn btn-secondary" onClick={() => navigate('/')}>
@@ -104,7 +104,7 @@ export default function EditorPage() {
 
       {error && (
         <div className="error-message">
-          <strong>❌ Error:</strong> {error}
+          <strong>Error:</strong> {error}
           <button className="btn btn-secondary" onClick={() => setError(null)}>
             ✕ Dismiss
           </button>
@@ -120,18 +120,6 @@ export default function EditorPage() {
           onSaved={handleSaved}
           onSaveError={handleSaveError}
         />
-      </div>
-
-      <div className="editor-footer">
-        <div className="help-text">
-          <h4>💡 How to use the H5P Editor:</h4>
-          <ul>
-            <li>Select a content type from the dropdown</li>
-            <li>Fill in the content details in the form</li>
-            <li>Upload images, videos, or other media as needed</li>
-            <li>Click "Save Content" when you're done</li>
-          </ul>
-        </div>
       </div>
     </div>
   );

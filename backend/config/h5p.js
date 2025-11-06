@@ -59,10 +59,10 @@ async function initializeH5P(translationFn) {
     h5pEditor.setRenderer((model) => model);
     h5pPlayer.setRenderer((model) => model);
 
-    console.log("✅ H5P initialized successfully!");
+    console.log("H5P initialized successfully!");
     return { h5pEditor, h5pPlayer, config };
   } catch (error) {
-    console.error("❌ H5P initialization failed:", error);
+    console.error("H5P initialization failed:", error);
     throw error;
   }
 }

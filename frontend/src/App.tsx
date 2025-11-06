@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import EditorPage from './pages/EditorPage';
 import PlayerPage from './pages/PlayerPage';
-import DocumentationPage from './pages/DocumentationPage';
 import './App.css';
 
 function App() {
@@ -11,11 +10,10 @@ function App() {
       <div className="app">
         <nav className="navbar">
           <div className="nav-brand">
-            <h1>🎓 H5P Learning App</h1>
+            <h1>H5P Prototype</h1>
           </div>
           <div className="nav-links">
             <Link to="/">Home</Link>
-            <Link to="/docs">Documentation</Link>
           </div>
         </nav>
 
@@ -25,7 +23,6 @@ function App() {
             <Route path="/create" element={<EditorPage />} />
             <Route path="/edit/:contentId" element={<EditorPage />} />
             <Route path="/play/:contentId" element={<PlayerPage />} />
-            <Route path="/docs" element={<DocumentationPage />} />
           </Routes>
         </main>
       </div>

@@ -78,8 +78,7 @@ async function startServer() {
 
     // STEP 6: Start listening
     app.listen(PORT, () => {
-      console.log(`🚀 H5P Backend Server running at http://localhost:${PORT}`);
-      console.log(`📚 API Documentation: http://localhost:${PORT}/api/info`);
+      console.log(`H5P Backend Server running at http://localhost:${PORT}`);
     });
   } catch (error) {
     console.error("Failed to start server:", error);
