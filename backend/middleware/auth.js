@@ -14,7 +14,7 @@ const DEMO_USERS = {
  * In production, replace this with proper JWT/session auth
  */
 function authMiddleware(req, res, next) {
-  const userId = req.headers["x-user-id"] || "teacher";
+  const userId = req.headers["x-user-id"] || "anonymous";
   const userData = DEMO_USERS[userId] || DEMO_USERS.anonymous;
   
   req.user = new User(
