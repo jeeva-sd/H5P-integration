@@ -51,9 +51,9 @@ export default function HomePage() {
 
       {error && (
         <div className="error-message">
-          <strong>❌ Error:</strong> {error}
+          <strong>Error:</strong> {error}
           <button className="btn btn-secondary" onClick={loadContent}>
-            🔄 Retry
+            Retry
           </button>
         </div>
       )}

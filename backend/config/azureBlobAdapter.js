@@ -30,7 +30,7 @@ class AzureBlobS3Adapter {
     try {
       // Just verify the container exists by getting its properties
       await this.containerClient.getProperties();
-      console.log(`✓ Using existing container: ${this.containerName}`);
+      console.log(`Using existing container: ${this.containerName}`);
     } catch (error) {
       if (error.statusCode === 404) {
         throw new Error(`Container '${this.containerName}' does not exist in the storage account. Please create it first.`);
@@ -71,10 +71,10 @@ class AzureBlobS3Adapter {
         }
       });
 
-      console.log(`✓ Successfully uploaded: ${fullPath}`);
+      console.log(`Successfully uploaded: ${fullPath}`);
       return uploadResponse;
     } catch (error) {
-      console.error(`❌ Error uploading to Azure Blob: ${fullPath}`, error.message);
+      console.error(`Error uploading to Azure Blob: ${fullPath}`, error.message);
       console.error(`   Full error:`, error);
       throw error;
     }
@@ -282,7 +282,7 @@ class AzureBlobS3Adapter {
       stream.on('data', (chunk) => chunks.push(chunk));
       stream.on('end', () => resolve(Buffer.concat(chunks)));
       stream.on('error', (err) => {
-        console.error('❌ Error reading stream:', err);
+        console.error('Error reading stream:', err);
         reject(err);
       });
     });

@@ -136,7 +136,7 @@ async function runTest(name, testFn) {
   } catch (error) {
     testResults.failed++;
     testResults.tests.push({ name, status: 'FAILED', error: error.message });
-    console.log(`\r${colors.red}❌ FAILED: ${name}${colors.reset}`);
+    console.log(`\r${colors.red}FAILED: ${name}${colors.reset}`);
     console.log(`   ${colors.red}Error: ${error.message}${colors.reset}`);
     return false;
   }
@@ -311,7 +311,7 @@ H5P.GreetingCard = (function ($) {
     console.log(`${colors.green}✅ Successfully installed H5P.GreetingCard${colors.reset}`);
     return true;
   } catch (err) {
-    console.log(`${colors.red}❌ Failed to install library: ${err.message}${colors.reset}`);
+    console.log(`${colors.red}Failed to install library: ${err.message}${colors.reset}`);
     return false;
   }
 }
@@ -368,7 +368,7 @@ async function testCreateContent() {
   assert(response.body.metadata, 'Metadata should be returned');
   
   testContentId = response.body.contentId;
-  console.log(`   ${colors.blue}📝 Created content ID: ${testContentId}${colors.reset}`);
+  console.log(`   ${colors.blue}Created content ID: ${testContentId}${colors.reset}`);
 }
 
 async function testListContentAfterCreate() {
@@ -493,7 +493,7 @@ async function runAllTests() {
   console.log('');
 
   if (!libraryInstalled) {
-    console.log(`${colors.red}❌ Failed to install H5P library. Cannot proceed with tests.${colors.reset}\n`);
+    console.log(`${colors.red}Failed to install H5P library. Cannot proceed with tests.${colors.reset}\n`);
     process.exit(1);
   }
 
@@ -504,7 +504,7 @@ async function runAllTests() {
   await runTest('Get Editor for New Content', testGetEditorForNewContent);
   
   // CRUD Operations
-  console.log('\n' + `${colors.bright}📝 CRUD Operations${colors.reset}`);
+  console.log('\n' + `${colors.bright}CRUD Operations${colors.reset}`);
   const createSuccess = await runTest('Create Content', testCreateContent);
   
   if (createSuccess && testContentId) {
@@ -541,7 +541,7 @@ async function runAllTests() {
   console.log(`Pass Rate:    ${passRate}%\n`);
 
   if (testResults.failed > 0) {
-    console.log(`${colors.red}❌ Failed Tests:${colors.reset}`);
+    console.log(`${colors.red}Failed Tests:${colors.reset}`);
     testResults.tests
       .filter(t => t.status === 'FAILED')
       .forEach(t => {
@@ -575,7 +575,7 @@ async function checkServer() {
   const serverRunning = await checkServer();
   
   if (!serverRunning) {
-    console.log(`${colors.red}❌ Server is not running on ${BASE_URL}${colors.reset}`);
+    console.log(`${colors.red}Server is not running on ${BASE_URL}${colors.reset}`);
     console.log(`${colors.yellow}Please start the server first: cd backend && npm run dev${colors.reset}\n`);
     process.exit(1);
   }

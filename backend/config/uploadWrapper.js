@@ -12,10 +12,10 @@ class Upload {
     console.log(`📦 Upload.done() called for key: ${this.params.Key}`);
     try {
       const result = await this.client.putObject(this.params);
-      console.log(`✓ Upload completed for: ${this.params.Key}`);
+      console.log(`Upload completed for: ${this.params.Key}`);
       return result;
     } catch (error) {
-      console.error(`❌ Upload.done() failed for: ${this.params.Key}`, error.message);
+      console.error(`Upload.done() failed for: ${this.params.Key}`, error.message);
       throw error;
     }
   }
